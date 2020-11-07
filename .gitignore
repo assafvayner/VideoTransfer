@@ -1,3 +1,9 @@
+.vscode/*
+
+# testing executables
+server
+client
+
 # Prerequisites
 *.d
 
