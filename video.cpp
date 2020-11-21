@@ -1,44 +1,34 @@
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <opencv2/videoio.hpp>
-#include <string>
-#include <vector>
+#include "video.h"
 
-#define uchar unsigned char
-
-int main(int argc, char** argv) {
+//starts video camera capture process
+cv::VideoCapture video_capture_init() {
 
 	cv::VideoCapture cap(0);
 	
 	if(!cap.isOpened()) {
   		std::cout << "error opening camera" << std::endl;
-		return -1;
+		exit(-1);
 	}
 
 	std::cout << "camera successfully opened" << std::endl;
+	
+	return cap;
+}
 
-	while (true) {
-		cv::Mat frame;
-		cap >> frame;
-
-		if (frame.empty()) {
-			break;
-		}
-		cv::imshow("Frame", frame);
-		//out.write(frame);
-		/*std::vector<uchar> buf_vector;
-		cv::imencode(".jpg", frame, buf, std::vector<int>());
-		char* buffer = &buf_vector[0];
-		int buffer_size = buf_vector.size();
-*/
-		char c = (char) cv::waitKey(25);
-
-		if (c == 27) {
-			break;
-		}
-	}
-	cap.release();
+//closes camera access
+void video_capture_close(cv::VideoCapture cap) {
+	cap.release();                                                                                   
 	cv::destroyAllWindows();
+}
 
-	return 0;
+// encodes an opencv mat as a jpeg, stored in buffer
+// returns size of the buffer
+int jpg_encode(cv::Mat frame, char* buffer) {
+	std::vector<uchar> buf_vector;
+	//encodes the frame into buf_vector
+    cv::imencode(".jpg", frame, buf_vector, std::vector<int>());
+	//converts the encoded vector into a buffer array of bytes
+    buffer = reinterpret_cast<char*> (buf_vector.data());
+    printf("buf_vector.size(): %d\n", (int)buf_vector.size());
+	return buf_vector.size();
 }

@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g -Wall `pkg-config --cflags --libs opencv`
 
-all : server client vid
+old: server client
 
 server: server.cpp
 	$(CC) -o $@ $^
@@ -9,5 +9,5 @@ server: server.cpp
 client: client.cpp
 	$(CC) -o $@ $^
 
-vid: video.cpp
+stream: video.cpp udp_server.cpp stream.cpp
 	$(CC) $(CFLAGS) -o $@ $^

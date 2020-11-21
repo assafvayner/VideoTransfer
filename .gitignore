@@ -1,8 +1,12 @@
 .vscode/*
 
+# private files
+TODO.txt
+
 # testing executables
 server
 client
+stream
 
 # Prerequisites
 *.d

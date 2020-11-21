@@ -6,6 +6,7 @@
 #include <string.h> 
 #define PORT 8080 
 
+// refills buffer with 0's
 void resetBuffer(char* buffer, int buffer_len) {
 	for (int i = 0; i < buffer_len; i++) {
 		buffer[i] = 0;
@@ -46,12 +47,15 @@ int main(int argc, char const *argv[])
 	{ 
 		perror("bind failed"); 
 		exit(EXIT_FAILURE); 
-	} 
+	}
+
+	// marks socket as accepting connection	
 	if (listen(server_fd, 3) < 0) 
 	{ 
 		perror("listen"); 
 		exit(EXIT_FAILURE); 
-	} 
+	}
+	//accept connection from "client"
 	if ((new_socket = accept(server_fd, (struct sockaddr *)&address, 
 					(socklen_t*)&addrlen))<0) 
 	{ 
@@ -60,11 +64,15 @@ int main(int argc, char const *argv[])
 	} 
 	
 	while (true) {
+		//reset buffer to be all 0's
 		resetBuffer(buffer, buffer_len);
-		valread = read( new_socket , buffer, 1024);
+		//read value sent from "client", stored in buffer
+		valread = read( new_socket , buffer, buffer_len);
+		//exit loop if recieved "close" and close socket
 		if (!strcmp(buffer, "close")) {
 			break;
 		}
+		//only print if buffer contains information
 		if (*buffer != 0) {
 			printf("%s\n", buffer);
 		}
