@@ -2,7 +2,7 @@
 
 Code for moving video streams between robot and base station for Husky Robotics Team
 
-Stream video to website (in progress):
+Stream video to js base station (in progress):
 - must be able to run web server, if npm installed, use the following:
 	- npm install http-server -g (must have root access)
 	- run website in dashboard directory with `http-server dashboard`
