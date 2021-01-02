@@ -8,8 +8,7 @@ Stream video to website (in progress):
 	- run website in dashboard directory with `http-server dashboard`
 - `make stream`
 - run the stream with `./stream`
-- run `http-server dashboard`, must be run after `./stream`
-- on your browser go to `localhost:8081`
+- *There is nothing that's reciving the video stream by default*
 
 temp client and server echo process:
 - `make old`
