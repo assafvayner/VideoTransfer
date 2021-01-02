@@ -1,6 +1,15 @@
-#include "video.h"
-#include "udp_server.h"
+#include "stream.h"
 
+
+/* intended to stream frames from robot camera to base station using UDP
+ * to avoid back and forth communication as there is high potential for
+ * communication issues between robot and base station for a large ammount
+ * of data on the field. currently streams a jpeg representation of camera
+ * feed to client at address and port at CLIENT_ADDR and CLIENT_PORT global vars in
+ * udp_server.h, will need to be changed to fit the ip address of the base station
+ * and port that the server on the base station will be listening for video
+ * stream.
+ */
 int main(int argc, char** argv) {
 	//start camera access
 	cv::VideoCapture cap = video_capture_init();
@@ -8,20 +17,13 @@ int main(int argc, char** argv) {
 
 	//create server socket
 	int sock_fd;
-    struct sockaddr_in servaddr, cliaddr;
-	socket_gen(&sock_fd, &servaddr, &cliaddr);
-	printf("socket generated successfully\n");
-
-	//connect to base station
-	int client_sock = listen_for_connection(sock_fd, &servaddr, sizeof(servaddr));
-	printf("connected to base station\n");
-
-	//send mjpeg header
-	send_mjpeg_format(sock_fd);
-	printf("send mjpeg header\n");
+  struct sockaddr_in servaddr, cliaddr;
+	sock_fd = socket_gen(&servaddr);
+	printf("video stream socket generated successfully\n");
+	fill_client_info(&cliaddr);
 	
 	//initialize large space in memory for buffer
-	char* buffer = (char*)malloc(1 << 22);
+	char* buffer = (char*)malloc(1 << 21);
 	int buffer_size;
 
 	while (true) {
@@ -34,13 +36,14 @@ int main(int argc, char** argv) {
 		
 		//encode current camera feed as jpg and send it
 		buffer_size = jpg_encode(frame, buffer);
-		send(sock_fd, buffer, buffer_size, 0);
+		sendto(sock_fd, buffer, buffer_size, 0, (sockaddr*)(&cliaddr), sizeof(sockaddr));
 
 		// hit esc to exit loop
-		char c = (char) cv::waitKey(25);
+		/*char c = (char) cv::waitKey(25);
 		if (c == 27) {
 			break;
         }
+    */
 
 	}
 
@@ -50,9 +53,75 @@ int main(int argc, char** argv) {
 	close(sock_fd);
 	printf("closed socket successfully\n");
 	// close camera input
-	video_capture_close(cap);
+	cap.release();                                                                                   
 	printf("closed camera successfully\n");
 	printf("finite\n");
 	return 0;
 
 }
+
+//starts video camera capture process
+cv::VideoCapture video_capture_init() {
+	cv::VideoCapture cap(0);
+	
+	if(!cap.isOpened()) {
+ 		std::cout << "error opening camera" << std::endl;
+		exit(-1);
+	}
+
+	return cap;
+}
+
+// encodes an opencv mat as a jpeg, stored in buffer
+// returns size of the buffer
+int jpg_encode(cv::Mat frame, char* buffer) {
+	std::vector<uchar> buf_vector;
+	//encodes the frame into buf_vector
+    cv::imencode(".jpg", frame, buf_vector, std::vector<int>());
+	//converts the encoded vector into a buffer array of bytes
+    buffer = reinterpret_cast<char*> (buf_vector.data());
+    printf("buf_vector.size(): %d\n", (int)buf_vector.size());
+	return buf_vector.size();
+}
+
+// generates the server socket
+int socket_gen(struct sockaddr_in * servaddr_ref) { 
+	int sock_fd;
+	struct sockaddr_in servaddr;
+	
+	// Creating socket file descriptor 
+	if ((sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) == 0) { 
+		std::cout << "Failed to create video stream socket" << std::endl;
+		exit(0);
+	}
+
+	memset(&servaddr, 0, sizeof(servaddr)); 
+
+	servaddr.sin_family = AF_INET;// IPv4 
+	servaddr.sin_addr.s_addr = INADDR_ANY; 
+	servaddr.sin_port = htons( PORT ); 
+	
+	// binds socket to port
+	if (bind(sock_fd, (struct sockaddr *)&servaddr, sizeof(servaddr))<0) { 
+		std::cout << "Failed to bind video stream socket to port: " << PORT << std::endl;
+		exit(0); 
+	}
+
+	//updates values at pointers stored in scope of stream
+	*servaddr_ref = servaddr;
+  
+	return sock_fd;
+}
+
+void fill_client_info(struct sockaddr_in* cliaddr_ref) {
+	sockaddr_in cliaddr;
+
+	memset(&cliaddr, 0, sizeof(cliaddr));
+	
+	cliaddr.sin_family = AF_INET;
+	cliaddr.sin_addr.s_addr = inet_addr(CLIENT_ADDR);
+	cliaddr.sin_port = htons(CLIENT_PORT);
+
+  *cliaddr_ref = cliaddr;
+}
+
