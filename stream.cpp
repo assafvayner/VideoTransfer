@@ -77,10 +77,9 @@ cv::VideoCapture video_capture_init() {
 int jpg_encode(cv::Mat frame, char* buffer) {
 	std::vector<uchar> buf_vector;
 	//encodes the frame into buf_vector
-    cv::imencode(".jpg", frame, buf_vector, std::vector<int>());
+  cv::imencode(".jpg", frame, buf_vector, std::vector<int>());
 	//converts the encoded vector into a buffer array of bytes
-    buffer = reinterpret_cast<char*> (buf_vector.data());
-    printf("buf_vector.size(): %d\n", (int)buf_vector.size());
+  buffer = reinterpret_cast<char*> (buf_vector.data());
 	return buf_vector.size();
 }
 

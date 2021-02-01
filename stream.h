@@ -22,8 +22,8 @@ cv::VideoCapture video_capture_init();
 int jpg_encode(cv::Mat frame, char* buffer);
 
 // communication related macros
-#define PORT 3010
-#define CLIENT_PORT 7000 //depends on base station server app
+#define PORT 4000
+#define CLIENT_PORT 3000 //depends on base station server app
 #define CLIENT_ADDR "127.0.0.1"  //depends on base station server app
 
 // communication related functions
